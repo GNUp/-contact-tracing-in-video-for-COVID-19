@@ -33,10 +33,10 @@ The output will be stored as `capture/{date-time of the contact}`
 
 In this demo, there is no depth information. Thus, you can just ignore the things about distance information in the frame.
 
-`Tracking mode`
+__Tracking mode__
 
 ![full frame](capture/full.png)
 
-`output screenshot`
+__output screenshot (`capture/20210108-003020.png`)__
 
 ![output](capture/20210108-003020.png)
