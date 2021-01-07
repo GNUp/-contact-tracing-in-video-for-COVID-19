@@ -28,3 +28,15 @@ $ python3 contact_tracing.py -s 30 -pd 150 -md 0.5 -se 10
 #### Output
 
 The output will be stored as `capture/{date-time of the contact}`
+
+#### Demo
+
+In this demo, there is no depth information. Thus, you can just ignore the things about distance information in the frame.
+
+`Tracking mode`
+
+![full frame](capture/full.png)
+
+`output screenshot`
+
+![output](capture/20210108-003020.png)
