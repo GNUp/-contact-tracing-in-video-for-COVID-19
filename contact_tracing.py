@@ -43,6 +43,13 @@ def union(a, b):
     h = max(a[3], b[3])
     return (x, y, w, h)
 
+def isGrouped(groupList, objID):
+    for g in groupList:
+        if objID in g.idGroup and len(g.idGroup) > 1:
+             return True
+    
+    return False
+
 
 # construct the argument parse and parse the arguments
 ap = argparse.ArgumentParser()
@@ -50,7 +57,7 @@ ap.add_argument("-c", "--confidence", type=float, default=0,
                 help="minimum probability to filter weak detections")
 ap.add_argument("-s", "--skip-frames", type=int, default=30,
                 help="# of skip frames between detections")
-ap.add_argument("-pd", "--pixel-distance", type=int, default=200,
+ap.add_argument("-pd", "--pixel-distance", type=int, default=150,
                 help="pixel threshold for contact tracking")
 ap.add_argument("-md", "--meter-distance", type=float, default=1,
                 help="meter threshold for contact tracking")
@@ -194,11 +201,20 @@ while True:
 
                     distanceBtwObjs = disFuc.euclidean(
                         oriCentroid, desCentroid)
-                    OriDistanceFromCam = depth.get_distance(
-                        oriCentroid[0], oriCentroid[1])
-                    DesDistanceFromCam = depth.get_distance(
-                        desCentroid[0], desCentroid[1])
-                    if distanceBtwObjs < args["pixel_distance"] and abs(OriDistanceFromCam - DesDistanceFromCam) < args["meter_distance"]:
+                    print(oriCentroid)
+                    print(desCentroid)
+                    if 0 < oriCentroid[0] < 640 and 0 < oriCentroid[1] < 480 \
+                        and 0 < desCentroid[0] < 640 and 0 < desCentroid[1] < 480:
+                        oriDistanceFromCam = depth.get_distance(
+                            oriCentroid[0], oriCentroid[1])
+                        desDistanceFromCam = depth.get_distance(
+                            desCentroid[0], desCentroid[1])
+                    else: # fail to get a depth from the pixel
+                        oriDistanceFromCam = 0
+                        desDistanceFromCam = 9999999999999
+
+                    print(distanceBtwObjs)
+                    if distanceBtwObjs < args["pixel_distance"] and abs(oriDistanceFromCam - desDistanceFromCam) < args["meter_distance"]:
                         g.addEdge(oriObjectID, desObjectID)
                 discoverEdge(destinationVertices, g)
         discoverEdge(objectList, g)
@@ -220,7 +236,7 @@ while True:
                 cropImg = frame[startY:endY, startX:endX]
                 timestr = time.strftime("%Y%m%d-%H%M%S")
                 cv2.imwrite("capture/" + timestr + ".png", cropImg)
-
+                print(g)
                 print(
                     "-----------------------------Capured!-----------------------------")
 
@@ -228,6 +244,17 @@ while True:
                 groupList.append(g)
             else:
                 groupList.append(g)
+                
+    # draw line between members of a detected group
+    for g in updatedGroupList:
+        if len(g.idGroup) != 1:
+            for (oriID, desID) in itertools.combinations(g.idGroup, 2):
+                try:
+                    oriCentroid = tuple(objects[oriID][0])
+                    desCentroid = tuple(objects[desID][0])
+                    cv2.line(frame, oriCentroid, desCentroid, (255, 0, 0), 2)
+                except:
+                    pass
 
     # loop over the tracked objects
     for (objectID, (centroid, rect)) in objects.items():
@@ -242,16 +269,27 @@ while True:
         # store the trackable object in our dictionary
         trackableObjects[objectID] = to
 
-        # draw both the ID of the object, the distance of the object,  and the centroid of the
-        # object on the output frame
-        # get the distance of the object
-        distance = depth.get_distance(centroid[0], centroid[1])
+        # draw both the ID of the object, the distance of the object,
+        # and the centroid of the object on the output frame
+        if 0 < centroid[0] < 640 and 0 < centroid[1] < 480:
+            distance = depth.get_distance(centroid[0], centroid[1])
+        else:
+            distance = 0
         text = "Person {} - {}m".format(objectID, round(distance, 2))
         (startX, startY, endX, endY) = rect
         y = startY - 10 if startY - 10 > 10 else startY + 10
         cv2.putText(frame, text, (startX, y),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
-        # cv2.circle(frame, (centroid[0], centroid[1]), 4, (0, 255, 0), -1)
+
+        # draw the green bounding box if the object is not included in any group,
+        # otherwise red bounding box
+        if isGrouped(updatedGroupList, objectID):
+            cv2.rectangle(frame, (startX, startY), (endX, endY), (0, 0, 255), 2)
+            cv2.circle(frame, (centroid[0], centroid[1]), 4, (255, 0, 0), -1)
+        else:
+            cv2.rectangle(frame, (startX, startY), (endX, endY), (0, 255, 0), 2)
+
+    # cv2.imwrite("capture/full.png", frame)
 
     # construct a tuple of information we will be displaying on the
     # frame
@@ -264,10 +302,6 @@ while True:
         text = "{}: {}".format(k, v)
         cv2.putText(frame, text, (10, H - ((i * 20) + 20)),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
-
-    # Draw the bounding boxes
-    for (startX, startY, endX, endY) in rects:
-        cv2.rectangle(frame, (startX, startY), (endX, endY), (0, 255, 0), 2)
 
     # show the output frame
     frame = imutils.resize(frame, width=1024)
