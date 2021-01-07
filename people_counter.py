@@ -29,35 +29,16 @@ import time
 import itertools
 
 def merge_recs(rects):
-    while (1):
-        found = 0
-        for ra, rb in itertools.combinations(rects, 2):
-            if intersection(ra, rb):
-                if ra in rects:
-                    rects.remove(ra)
-                if rb in rects:
-                    rects.remove(rb)
-                rects.append((union(ra, rb)))
-                found = 1
-                break
-        if found == 0:
-            break
-
-    return rects
+    result = (640, 480, 0, 0)
+    for rect in rects:
+        result = union(result, rect)
+    return [result]
 
 def union(a,b):
   x = min(a[0], b[0])
   y = min(a[1], b[1])
-  w = max(a[0]+a[2], b[0]+b[2]) - x
-  h = max(a[1]+a[3], b[1]+b[3]) - y
-  return (x, y, w, h)
-
-def intersection(a,b):
-  x = max(a[0], b[0])
-  y = max(a[1], b[1])
-  w = min(a[0]+a[2], b[0]+b[2]) - x
-  h = min(a[1]+a[3], b[1]+b[3]) - y
-  if w<0 or h<0: return () # or (0,0,0,0) ?
+  w = max(a[2], b[2])
+  h = max(a[3], b[3])
   return (x, y, w, h)
 
 # construct the argument parse and parse the arguments
@@ -70,6 +51,12 @@ ap.add_argument("-c", "--confidence", type=float, default=0,
         help="minimum probability to filter weak detections")
 ap.add_argument("-s", "--skip-frames", type=int, default=30,
         help="# of skip frames between detections")
+ap.add_argument("-pd", "--pixel-distance", type=int, default=200,
+        help="pixel threshold for contact tracking")
+ap.add_argument("-md", "--meter-distance", type=float, default=1,
+        help="meter threshold for contact tracking")
+ap.add_argument("-se", "--contact-time", type=int, default=3,
+        help="minimum seconds for close contact")
 args = vars(ap.parse_args())
 
 # load our serialized model
@@ -171,8 +158,9 @@ while True:
 
                 # Detect people in the frame
                 (rectangles, weights) = hog.detectMultiScale(frame, winStride=(4, 4), padding=(8,8), scale=1.05)
+
                 rectangles = np.array([[x, y, x + w, y + h] for (x, y, w, h) in rectangles])
-                picks = non_max_suppression(rectangles, probs=None, overlapThresh=0.5)
+                picks = non_max_suppression(rectangles, probs=None, overlapThresh=0.65)
 
 
                 # loop over the detections
@@ -235,8 +223,7 @@ while True:
                         distanceBtwObjs = disFuc.euclidean(oriCentroid, desCentroid)
                         OriDistanceFromCam = depth.get_distance(oriCentroid[0], oriCentroid[1])
                         DesDistanceFromCam = depth.get_distance(desCentroid[0], desCentroid[1])
-
-                        if distanceBtwObjs < 500 and abs(OriDistanceFromCam - DesDistanceFromCam) < 100:
+                        if distanceBtwObjs < args["pixel_distance"] and abs(OriDistanceFromCam - DesDistanceFromCam) < args["meter_distance"]:
                             g.addEdge(oriObjectID, desObjectID)
                     discoverEdge(destinationVertices, g)
             discoverEdge(objectList, g)
@@ -248,16 +235,19 @@ while True:
             # capture long-lasting group and renew group list
             groupList = []
             for g in updatedGroupList:
-                if abs(time.time() - g.timestamp) > 5:
+                if abs(time.time() - g.timestamp) > args["contact_time"]:
                     capturedRects = []
                     for idx in g.idGroup:
                         (centroid, rect) = objects[idx]
                         capturedRects.append(rect)
-                    (x, y, w, h) = merge_recs(capturedRects)[0]                    
-                    cropImg = frame[y:y + h, x:x + w]
+                    print(capturedRects)
+                    print(merge_recs(capturedRects))
+                    (startX, startY, endX, endY) = merge_recs(capturedRects)[0]                    
+                    cropImg = frame[startY:endY, startX:endX]
+                    timestr = time.strftime("%Y%m%d-%H%M%S")
+                    cv2.imwrite("capture/" + timestr + ".png", cropImg)
                     print(g)
-                    cv2.imwrite("capture/output.png", cropImg)
-
+                    print("Capure")
                     g.captured = True
                     groupList.append(g)
                 else:
@@ -285,7 +275,7 @@ while True:
                 (startX, startY, endX, endY) = rect
                 y = startY - 10 if startY - 10 > 10 else startY + 10
                 cv2.putText(frame, text, (startX, y),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1)
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
                 # cv2.circle(frame, (centroid[0], centroid[1]), 4, (0, 255, 0), -1)
 
         # construct a tuple of information we will be displaying on the
