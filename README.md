@@ -27,7 +27,6 @@ $ python3 contact_tracing.py -s 30 -pd 150 -md 0.5 -se 10
 * `-md`: the minimum meter distance between pedestrians and the camera for the contact detecting
 * `-se`: the minimum time (seconds) for contact to be detected
 
+#### Output
 
-
-
-  
+The output will be stored as `capture/{date-time of the contact}`
