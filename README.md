@@ -1,4 +1,4 @@
-# contact-tracing-in-video-for-COVID-19 ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/pyrealsense2)
+# social-distancing-detectors-for-COVID-19![PyPI - Python Version](https://img.shields.io/pypi/pyversions/pyrealsense2)
 > Most of code are brought from https://www.pyimagesearch.com/2018/08/13/opencv-people-counter/
 
 This project is for tracing the close contact made by infectee in the public space with a `raspberry pi 4B`- based surveillance camera. For this purpose, we utilize the pedestrian detection and object tracing to execute computing-burden jobs in the limited hardware. Contact information of observed people is then collected using `Intel Realsense Depth Camera D435`.  The close contacts which last for a certain time or longer will be detected and recorded as a screenshot. In the last, an examiner only need to search and check the saved screenshots, instead of inspecting a long record of the surveillance camera.
