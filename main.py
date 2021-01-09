@@ -13,7 +13,11 @@ import recorder
 
 # construct the argument parse and parse the arguments
 ap = argparse.ArgumentParser()
-ap.add_argument("-c", "--confidence", type=float, default=0,
+ap.add_argument("-p", "--prototxt", default="mobilenet_ssd/MobileNetSSD_deploy.prototxt",
+                help="path to Caffe 'deploy' prototxt file")
+ap.add_argument("-m", "--model", default="mobilenet_ssd/MobileNetSSD_deploy.caffemodel",
+                help="path to Caffe pre-trained model")
+ap.add_argument("-c", "--confidence", type=float, default=0.4,
                 help="minimum probability to filter weak detections")
 ap.add_argument("-s", "--skip-frames", type=int, default=30,
                 help="# of skip frames between detections")
@@ -34,7 +38,7 @@ config.enable_stream(rs.stream.depth, 640, 480, rs.format.z16, 30)
 pipeline.start(config)
 time.sleep(2.0)
 
-recorderHandler = recorder.Recorder(args["confidence"], args["skip_frames"], args["pixel_distance"], args["meter_distance"], args["contact_time"])
+recorderHandler = recorder.Recorder(args["confidence"], args["skip_frames"], args["pixel_distance"], args["meter_distance"], args["contact_time"], args["prototxt"], args["model"])
 
 while(True):
     # grab the next frame and handle

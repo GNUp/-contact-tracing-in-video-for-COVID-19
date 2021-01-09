@@ -27,8 +27,15 @@ import group
 import time
 import itertools
 
+# initialize the list of class labels MobileNet SSD was trained to
+# detect
+CLASSES = ["background", "aeroplane", "bicycle", "bird", "boat",
+    "bottle", "bus", "car", "cat", "chair", "cow", "diningtable",
+    "dog", "horse", "motorbike", "person", "pottedplant", "sheep",
+    "sofa", "train", "tvmonitor"]
+
 class Recorder:
-    def __init__(self, argConf, argSkip, argPd, argMd, argTime):
+    def __init__(self, argConf, argSkip, argPd, argMd, argTime, argPro, argModel):
         self.argConf = argConf
         self.argSkip = argSkip
         self.argPd = argPd
@@ -37,10 +44,11 @@ class Recorder:
         
         # load our serialized model
         print("[INFO] loading model...")
-        # net = cv2.dnn.readNetFromCaffe(args["prototxt"], args["model"])
+        self.net = cv2.dnn.readNetFromCaffe(argPro, argModel)
+        self.net.setPreferableTarget(cv2.dnn.DNN_TARGET_MYRIAD)
         # Initialize the HOG descriptor/person detector
-        self.hog = cv2.HOGDescriptor()
-        self.hog.setSVMDetector(cv2.HOGDescriptor_getDefaultPeopleDetector())
+        #self.hog = cv2.HOGDescriptor()
+        #self.hog.setSVMDetector(cv2.HOGDescriptor_getDefaultPeopleDetector())
 
         # initialize the frame dimensions (we'll set them as soon as we read
         # the first frame from the video)
@@ -94,22 +102,46 @@ class Recorder:
             self.trackers = []
 
             # Detect people in the frame
+            """
             (rectangles, weights) = self.hog.detectMultiScale(
                 frame, winStride=(4, 4), padding=(8, 8), scale=1.05)
 
             rectangles = np.array([[x, y, x + w, y + h]
                                    for (x, y, w, h) in rectangles])
             picks = non_max_suppression(rectangles, probs=None, overlapThresh=0.65)
-
+            """
+            # convert the frame to a blob and pass the blob through the
+            # network and obtain the detections
+            blob = cv2.dnn.blobFromImage(frame, 0.007843, (self.W, self.H), 127.5)
+            self.net.setInput(blob)
+            detections = self.net.forward()
+            
             # loop over the detections
-            for pick, weight in zip(picks, weights):
+            for i in np.arange(0, detections.shape[2]):
+                # extract the confidence (i.e., probability) associated
+                # with the prediction
+                confidence = detections[0, 0, i, 2]
+                
+                
                 # filter out weak detections by requiring a minimum
                 # confidence
-                if weight > self.argConf:
+                if confidence > self.argConf:
+                    # extract the index of the class label from the
+                    # detections list
+                    idx = int(detections[0, 0, i, 1])
+                    
+                    # if the class label is not a person, ignore it
+                    if CLASSES[idx] != "person":
+                        continue
+                    
+                    # compute the (x, y)-coordinates of the bounding box
+                    # for the object
+                    box = detections[0, 0, i, 3:7] * np.array([self.W, self.H, self.W, self.H])
+                    (startX, startY, endX, endY) = box.astype("int")
+                    
                     # construct a dlib rectangle object from the bounding
                     # box coordinates and then start the dlib correlation
                     # tracker
-                    (startX, startY, endX, endY) = pick
                     tracker = dlib.correlation_tracker()
                     rect = dlib.rectangle(startX, startY, endX, endY)
                     tracker.start_track(rgb, rect)
