@@ -33,8 +33,7 @@ import itertools
 from conf import Conf
 
 class Recorder:
-    def __init__(self, argConf, argSkip, argPd, argMd, argTime, argPro, argModel, argConfiguration):
-        self.argConf = argConf
+    def __init__(self, argSkip, argPd, argMd, argTime, argPro, argModel, argConfiguration):
         self.argSkip = argSkip
         self.argPd = argPd
         self.argMd = argMd

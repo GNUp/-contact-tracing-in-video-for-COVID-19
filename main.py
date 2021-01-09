@@ -17,8 +17,6 @@ ap.add_argument("-p", "--prototxt", default="mobilenet_ssd/MobileNetSSD_deploy.p
                 help="path to Caffe 'deploy' prototxt file")
 ap.add_argument("-m", "--model", default="mobilenet_ssd/MobileNetSSD_deploy.caffemodel",
                 help="path to Caffe pre-trained model")
-ap.add_argument("-f", "--confidence", type=float, default=0.4,
-                help="minimum probability to filter weak detections")
 ap.add_argument("-s", "--skip-frames", type=int, default=30,
                 help="# of skip frames between detections")
 ap.add_argument("-pd", "--pixel-distance", type=int, default=150,
@@ -27,7 +25,7 @@ ap.add_argument("-md", "--meter-distance", type=float, default=1,
                 help="meter threshold for contact tracking")
 ap.add_argument("-se", "--contact-time", type=int, default=3,
                 help="minimum seconds for close contact")
-ap.add_argument("-c", "--conf", required=True,
+ap.add_argument("-c", "--conf", default="config/config.json",
                 help="Path to the input configuration file")
 args = vars(ap.parse_args())
 
@@ -40,7 +38,7 @@ config.enable_stream(rs.stream.depth, 640, 480, rs.format.z16, 30)
 pipeline.start(config)
 time.sleep(2.0)
 
-recorderHandler = recorder.Recorder(args["confidence"], args["skip_frames"], args["pixel_distance"],
+recorderHandler = recorder.Recorder(args["skip_frames"], args["pixel_distance"],
                                     args["meter_distance"], args["contact_time"], args["prototxt"], args["model"], args["conf"])
 
 while(True):
