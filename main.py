@@ -17,9 +17,9 @@ ap.add_argument("-p", "--prototxt", default="mobilenet_ssd/MobileNetSSD_deploy.p
                 help="path to Caffe 'deploy' prototxt file")
 ap.add_argument("-m", "--model", default="mobilenet_ssd/MobileNetSSD_deploy.caffemodel",
                 help="path to Caffe pre-trained model")
-ap.add_argument("-s", "--skip-frames", type=int, default=30,
+ap.add_argument("-s", "--skip-frames", type=int, default=20,
                 help="# of skip frames between detections")
-ap.add_argument("-pd", "--pixel-distance", type=int, default=150,
+ap.add_argument("-pd", "--pixel-distance", type=int, default=100,
                 help="pixel threshold for contact tracking")
 ap.add_argument("-md", "--meter-distance", type=float, default=1,
                 help="meter threshold for contact tracking")
