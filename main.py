@@ -50,7 +50,7 @@ while(True):
     frame = recorderHandler.forward(frame, depth)
     
     # show the output frame
-    frame = imutils.resize(frame, width=1024)
+    frame = imutils.resize(frame, width=800)
     cv2.imshow("Frame", frame)
     key = cv2.waitKey(1) & 0xFF
     
