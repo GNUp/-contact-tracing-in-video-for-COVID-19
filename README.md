@@ -30,7 +30,11 @@ $ python3 main.py -s 30 -pd 150 -md 0.5 -se 10
 
 The output will be stored as `./capture/{date-time of the contact}`
 
-#### Demo for the contact detection via pixel distance in a frame
+#### Demo for detection
+
+We utilized the depth information from depth-cam to calculate 3d distance between people.
+
+![full frame](dis.png)
 
 __Tracking mode__
 
