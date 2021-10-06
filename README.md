@@ -1,7 +1,7 @@
 # Social-Distancing-Detectors-for-COVID-19 ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/pyrealsense2)
 > Main structures of code are brought from [people-counter](https://www.pyimagesearch.com/2018/08/13/opencv-people-counter/) and [tiny-yolo object detector](https://www.pyimagesearch.com/2020/01/27/yolo-and-tiny-yolo-object-detection-on-the-raspberry-pi-and-movidius-ncs/)
 
-This project is for tracing the close contact made by infectee in the public space with a `raspberry pi 4B`- based surveillance camera. For this purpose, we utilize the pedestrian detection and object tracing to execute computing-burden jobs in the limited hardware. Contact information of observed people is then collected using `Intel Realsense Depth Camera D435`.  The close contacts which last for a certain time or longer will be detected and recorded as a screenshot. In the last, an examiner only need to search and check the saved screenshots, instead of inspecting a long record of the surveillance camera.
+This sub-project is one of modules for `Anti-COVID19 robot` which can detect cough person and record social distancing violations. This module is for the latter which traces the close contact made by infectee in the public space with a `raspberry pi 4B`- based surveillance camera. For this purpose, we utilize the pedestrian detection and object tracing to execute computing-burden jobs in the limited hardware environment. Contact information of observed people is then collected using `Intel Realsense Depth Camera D435`.  The close contacts which last for a certain time or longer will be detected and recorded as a screenshot. In the last, an examiner only need to search and check the saved screenshots, instead of inspecting a long record of the surveillance camera.
 
 ## Start
 
@@ -18,21 +18,19 @@ This project is for tracing the close contact made by infectee in the public spa
 #### Execute
 
 ```shell
-$ python3 contact_tracing.py -s 30 -pd 150 -md 0.5 -se 10
+$ python3 main.py -s 30 -pd 150 -md 0.5 -se 10
 ```
 
-* `-s`: # of skip frames between detections
-* `-pd`: the minimum pixel euclidean distance between pedestrians for the contact detecting 
-* `-md`: the minimum meter distance between pedestrians and the camera for the contact detecting
-* `-se`: the minimum time (seconds) for contact to be detected
+* `-s`: Number of frames skipped between detections
+* `-pd`: Minimum pixel euclidean distance between pedestrians for the contact detecting 
+* `-md`: Minimum meter distance between pedestrians and the camera for the contact detecting
+* `-se`: Minimum time (seconds) for contact to be detected
 
 #### Output
 
-The output will be stored as `capture/{date-time of the contact}`
+The output will be stored as `./capture/{date-time of the contact}`
 
-#### Demo
-
-In this demo, there is no depth information. Thus, you can just ignore the things about distance information in the frame.
+#### Demo for the contact detection via pixel distance in a frame
 
 __Tracking mode__
 
@@ -41,3 +39,22 @@ __Tracking mode__
 __output screenshot (`capture/20210108-003020.png`)__
 
 ![output](capture/20210108-003020.png)
+
+## Anti-COVID19 Robot Architecture
+
+__Overall design__
+
+![output](architecture.png)
+
+__Cough Detector design__
+
+![output](cd.png)
+
+__Social Distancing Recorder design__
+
+![output](sdr.png)
+
+__Robot__
+
+![output](ro.png)
+
